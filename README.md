@@ -21,6 +21,10 @@ A chatbot that lets you ask questions about your uploaded documents and get quic
 - **Hosting**: [Vercel](https://vercel.com)
 - **Document Parsing**: PDF.js for document text extraction
 
+## Brand Colors
+- Primary: `#fffaea`
+- Secondary: `#191919`
+
 ## Getting Started
 
 First, run the development server:
