@@ -1,4 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AnalyzeDox - Document Chatbot
+
+A chatbot that lets you ask questions about your uploaded documents and get quick, clear answers. Upload your documents and start a natural conversation to extract insights and information efficiently.
+
+## Tech Stack
+
+### Frontend
+- **Framework**: [Next.js](https://nextjs.org)
+- **UI Library**: Shadcn/Tailwind CSS for modern, responsive design
+
+### AI Backend
+- **Language Model**: LLaMA via Together AI
+- **Embeddings**: Together AI for text embeddings
+- **Framework**: LangChain.js for document processing and query handling
+
+### Database
+- **Storage**: Supabase for document metadata and chat history
+- **Vector Search**: Supabase Vector for embedding-based search
+
+### Infrastructure
+- **Hosting**: [Vercel](https://vercel.com)
+- **Document Parsing**: PDF.js for document text extraction
 
 ## Getting Started
 
@@ -10,27 +31,27 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Document upload and parsing
+- Natural language querying
+- Real-time chat interface
+- Context-aware responses
+- Document history management
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+To learn more about the technologies used in this project:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [Next.js Documentation](https://nextjs.org/docs)
+- [LangChain.js Documentation](https://js.langchain.com/docs)
+- [Supabase Documentation](https://supabase.com/docs)
+- [Together AI Documentation](https://together.ai/docs)
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deploy your own instance using [Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
