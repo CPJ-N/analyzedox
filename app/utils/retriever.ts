@@ -1,20 +1,26 @@
-import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase"
-import { OpenAIEmbeddings } from '@langchain/openai'
-import { supabase } from './supabase'
+import { createClient } from '@supabase/supabase-js';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase';
 
-const openAIApiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
-const embeddings = new OpenAIEmbeddings({ openAIApiKey })
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const vectorStore = await SupabaseVectorStore.fromExistingIndex(embeddings, {
+// Initialize embeddings
+const embeddings = new OpenAIEmbeddings({
+    openAIApiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+});
+
+// Create vector store
+const vectorStore = new SupabaseVectorStore(embeddings, {
     client: supabase,
     tableName: 'documents',
-    queryName: 'match_documents'
-})
+    queryName: 'match_documents',
+});
 
-const retriever = vectorStore.asRetriever({
-    k: 5, // number of results to return
+// Create and export the retriever
+export const retriever = vectorStore.asRetriever({
     searchType: "similarity",
-    filter: {} // optional metadata filter
-})
-
-export { retriever }
+    k: 4,
+});

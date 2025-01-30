@@ -1,6 +1,11 @@
 export function formatConvHistory(messages: string[]): string {
-    return messages.map((message, i) => {
-        return i % 2 === 0 ? `Human: ${message}` : `AI: ${message}`;
-    }).join('\n');
-  }
+    if (messages.length === 0) return 'No conversation history.';
+
+    return messages
+        .map((message, i) => {
+            const role = i % 2 === 0 ? 'Human' : 'Assistant';
+            return `${role}: ${message}`;
+        })
+        .join('\n');
+}
   

@@ -4,7 +4,6 @@ import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { supabase } from "./supabase";
-import fs from 'fs';
 import path from 'path';
 
 const openAIApiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
@@ -28,7 +27,11 @@ export const loadSinglePDF = async (fileName: string) => {
             splitPages: false,
             parsedItemSeparator: "",
         });
+        
         const loadedDocs = await loader.load();
+        if (loadedDocs.length === 0) {
+            throw new Error('No content found in the PDF.');
+        }
 
         const combinedText = loadedDocs.map((doc: { pageContent: string }) => doc.pageContent.replace(/\r\n|\r|\n/g, " ")).join(" ");
         // console.log(combinedText)
@@ -49,8 +52,13 @@ export const loadSinglePDF = async (fileName: string) => {
             tableName: 'documents'
         })
         console.log(result)
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message.includes('Invalid PDF')) {
+            console.error("Invalid PDF file:", error);
+            throw new Error("The uploaded file is not a valid PDF. Please upload a valid PDF document.");
+        }
         console.error("Error loading or processing PDF:", error);
+        throw new Error("Failed to load or process the PDF file.");
     }
 
 }

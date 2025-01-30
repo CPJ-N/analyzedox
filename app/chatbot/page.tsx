@@ -8,13 +8,14 @@ import { combineDocuments } from '../utils/combineDocuments';
 import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 import { formatConvHistory } from '../utils/formatConvHistory';
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
-import Image from 'next/image';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Bot } from 'lucide-react';  // Add this import
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Upload } from 'lucide-react';
 
 interface Message {
   text: string;
@@ -33,6 +34,10 @@ export default function ChatbotComponent() {
   const [convHistory, setConvHistory] = useState<string[]>([]);
   const [userInput, setUserInput] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<string>('');
+  const { toast } = useToast();
   
   const openAIApiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
   const llm = new ChatOpenAI({ 
@@ -144,8 +149,58 @@ export default function ChatbotComponent() {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Log all available file information
+    const fileInfo = {
+      name: file.name,
+      size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+      type: file.type,
+      lastModified: new Date(file.lastModified).toLocaleString(),
+      webkitRelativePath: (file as any).webkitRelativePath || '',
+    };
+
+    console.log('File Information:', fileInfo);
+    console.table(fileInfo);
+
+    setSelectedFile(file.name);
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        toast({
+          title: "File uploaded successfully",
+          description: `${file.name} has been processed and is ready for analysis.`,
+        });
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      toast({
+        title: "Error uploading file",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const sendMessage = async () => {
-    if (userInput.trim()) {
+    if (!userInput.trim()) return;
+    
+    setIsLoading(true);
+    try {
       const newMessage = { text: userInput, sender: 'user' as 'user' | 'bot' };
       setMessages([...messages, newMessage]);
       setUserInput('');
@@ -168,6 +223,14 @@ export default function ChatbotComponent() {
         const botResponse = { text: response, sender: 'bot' as 'user' | 'bot' };
         setMessages(prevMessages => [...prevMessages, botResponse]);
       });
+    } catch (error) {
+      toast({
+        title: "Error sending message",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -187,6 +250,48 @@ export default function ChatbotComponent() {
       </header>
 
       <main className="flex flex-col flex-1 pt-20">
+        <div className="container mx-auto p-4">
+          <div className="w-full max-w-3xl mx-auto">
+            <div className="relative group">
+              <input
+                type="file"
+                accept=".pdf,.txt"
+                onChange={handleFileUpload}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                disabled={isUploading}
+              />
+              <div className={`flex flex-col items-center justify-center border-2 border-dashed 
+                rounded-lg p-6 transition-all duration-200 ease-in-out space-y-3
+                ${isUploading ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-accent/50'}`}
+              >
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                  {isUploading ? (
+                    <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                  ) : (
+                    <Upload className="h-6 w-6 text-primary" />
+                  )}
+                </div>
+                <div className="text-center space-y-1">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {isUploading ? 'Uploading...' : 'Upload your document'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isUploading 
+                      ? 'Please wait while we process your document'
+                      : selectedFile || 'Drop your PDF file here or click to browse'
+                    }
+                  </p>
+                </div>
+                {!isUploading && !selectedFile && (
+                  <p className="text-xs text-muted-foreground">
+                    PDF files up to 10MB
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <ScrollArea className="flex-1 px-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-12 py-8">
@@ -259,14 +364,19 @@ export default function ChatbotComponent() {
               onChange={(e) => setUserInput(e.target.value)}
               onKeyPress={handleUserInput}
               placeholder="Type your message..."
+              disabled={isLoading}
               className="flex-1 bg-background border text-foreground"
             />
             <Button
               onClick={sendMessage}
-              disabled={!userInput.trim()}
+              disabled={!userInput.trim() || isLoading}
               className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              <PaperAirplaneIcon className="h-5 w-5" />
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <PaperAirplaneIcon className="h-5 w-5" />
+              )}
             </Button>
           </div>
         </div>
